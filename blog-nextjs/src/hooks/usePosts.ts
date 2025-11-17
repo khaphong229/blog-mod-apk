@@ -60,10 +60,15 @@ export function usePost(slug: string) {
 /**
  * Get posts by category
  */
-export function usePostsByCategory(categorySlug: string, page = 1, limit = 12) {
+export function usePostsByCategory(
+  categorySlug: string,
+  page = 1,
+  limit = 12,
+  sortBy = "recent"
+) {
   return useQuery({
-    queryKey: ["posts", "category", categorySlug, page, limit],
-    queryFn: () => postService.getPostsByCategory(categorySlug, page, limit),
+    queryKey: ["posts", "category", categorySlug, page, limit, sortBy],
+    queryFn: () => postService.getPostsByCategory(categorySlug, page, limit, sortBy),
     enabled: !!categorySlug,
     staleTime: 5 * 60 * 1000,
   });

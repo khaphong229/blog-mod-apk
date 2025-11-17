@@ -35,6 +35,9 @@ export interface Post {
     name: string;
     slug: string;
   }[];
+  _count?: {
+    comments: number;
+  };
 }
 
 export interface Category {
@@ -53,10 +56,12 @@ export interface Category {
 
 export interface PostsResponse {
   posts: Post[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 class PostService {
@@ -114,12 +119,13 @@ class PostService {
   async getPostsByCategory(
     categorySlug: string,
     page = 1,
-    limit = 12
+    limit = 12,
+    sortBy = "recent"
   ): Promise<PostsResponse> {
     const response = await axios.get<PostsResponse>(
       `/api/posts/category/${categorySlug}`,
       {
-        params: { page, limit },
+        params: { page, limit, sortBy },
       }
     );
     return response.data;
