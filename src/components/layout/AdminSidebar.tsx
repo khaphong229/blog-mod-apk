@@ -93,7 +93,13 @@ export function AdminSidebar() {
   };
 
   const isActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + "/");
+    // Exact match or starts with the href followed by /
+    if (pathname === href) return true;
+    // For nested routes, check if pathname starts with href
+    if (href !== "/admin/dashboard" && pathname.startsWith(href + "/")) {
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -117,7 +123,7 @@ export function AdminSidebar() {
                     variant="ghost"
                     className={cn(
                       "w-full justify-between",
-                      isActive(item.href) && "bg-accent"
+                      isActive(item.href) && "bg-accent text-accent-foreground"
                     )}
                     onClick={() => toggleItem(item.href)}
                   >
@@ -141,7 +147,7 @@ export function AdminSidebar() {
                             size="sm"
                             className={cn(
                               "w-full justify-start",
-                              isActive(child.href) && "bg-accent"
+                              isActive(child.href) && "bg-accent text-accent-foreground"
                             )}
                           >
                             {child.title}
@@ -157,7 +163,7 @@ export function AdminSidebar() {
                     variant="ghost"
                     className={cn(
                       "w-full justify-start",
-                      isActive(item.href) && "bg-accent"
+                      isActive(item.href) && "bg-accent text-accent-foreground"
                     )}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
