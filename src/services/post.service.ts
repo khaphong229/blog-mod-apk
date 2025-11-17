@@ -134,9 +134,15 @@ class PostService {
   /**
    * Search posts
    */
-  async searchPosts(query: string, page = 1, limit = 12): Promise<PostsResponse> {
+  async searchPosts(
+    query: string,
+    page = 1,
+    limit = 12,
+    categoryId?: string,
+    sortBy = "recent"
+  ): Promise<PostsResponse> {
     const response = await axios.get<PostsResponse>("/api/posts/search", {
-      params: { q: query, page, limit },
+      params: { q: query, page, limit, categoryId, sortBy },
     });
     return response.data;
   }

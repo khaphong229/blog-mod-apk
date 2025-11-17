@@ -1,16 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Search, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserDropdown } from "./UserDropdown";
 import { siteConfig } from "@/config/site";
+import { useState } from "react";
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
+  };
+
+  const handleSearchClick = () => {
+    router.push("/search");
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -40,20 +55,33 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Search Bar */}
+        {/* Search Bar - Desktop */}
         <div className="hidden md:flex md:flex-1 md:items-center md:justify-center md:px-4">
-          <div className="relative w-full max-w-sm">
+          <form onSubmit={handleSearch} className="relative w-full max-w-sm">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Tìm kiếm ứng dụng, game..."
               className="pl-9 w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={handleSearchClick}
             />
-          </div>
+          </form>
         </div>
 
         {/* Right Side */}
         <div className="flex flex-1 items-center justify-end space-x-4">
+          {/* Mobile Search Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={handleSearchClick}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+
           <UserDropdown />
 
           {/* Mobile Menu Button */}

@@ -77,11 +77,16 @@ export function usePostsByCategory(
 /**
  * Search posts
  */
-export function useSearchPosts(query: string, page = 1, limit = 12) {
+export function useSearchPosts(
+  query: string,
+  page = 1,
+  limit = 12,
+  categoryId?: string,
+  sortBy = "recent"
+) {
   return useQuery({
-    queryKey: ["posts", "search", query, page, limit],
-    queryFn: () => postService.searchPosts(query, page, limit),
-    enabled: query.length > 0,
+    queryKey: ["posts", "search", query, page, limit, categoryId, sortBy],
+    queryFn: () => postService.searchPosts(query, page, limit, categoryId, sortBy),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 }
