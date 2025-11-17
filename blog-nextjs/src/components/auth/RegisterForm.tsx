@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { RegisterInput, registerSchema } from "@/lib/validations/auth";
+import { useRegister } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react";
 
 export function RegisterForm() {
-  const router = useRouter();
-  const [error, setError] = useState<string>("");
-  const [isLoading, setIsLoading] = useState(false);
+  const registerMutation = useRegister();
 
   const {
     register,
@@ -25,37 +22,8 @@ export function RegisterForm() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = async (data: RegisterInput) => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setError(result.error || "Đăng ký thất bại");
-        return;
-      }
-
-      // Redirect to login page
-      router.push("/login?registered=true");
-    } catch (error) {
-      setError("Đã có lỗi xảy ra. Vui lòng thử lại.");
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (data: RegisterInput) => {
+    registerMutation.mutate(data);
   };
 
   return (
@@ -68,12 +36,6 @@ export function RegisterForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-              {error}
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label htmlFor="name">Tên</Label>
             <Input
@@ -81,7 +43,7 @@ export function RegisterForm() {
               type="text"
               placeholder="Nguyễn Văn A"
               {...register("name")}
-              disabled={isLoading}
+              disabled={registerMutation.isPending}
             />
             {errors.name && (
               <p className="text-sm text-red-500">{errors.name.message}</p>
@@ -95,7 +57,7 @@ export function RegisterForm() {
               type="email"
               placeholder="example@email.com"
               {...register("email")}
-              disabled={isLoading}
+              disabled={registerMutation.isPending}
             />
             {errors.email && (
               <p className="text-sm text-red-500">{errors.email.message}</p>
@@ -109,7 +71,7 @@ export function RegisterForm() {
               type="password"
               placeholder="••••••••"
               {...register("password")}
-              disabled={isLoading}
+              disabled={registerMutation.isPending}
             />
             {errors.password && (
               <p className="text-sm text-red-500">{errors.password.message}</p>
@@ -123,7 +85,7 @@ export function RegisterForm() {
               type="password"
               placeholder="••••••••"
               {...register("confirmPassword")}
-              disabled={isLoading}
+              disabled={registerMutation.isPending}
             />
             {errors.confirmPassword && (
               <p className="text-sm text-red-500">
@@ -132,8 +94,8 @@ export function RegisterForm() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
+            {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Đăng ký
           </Button>
 
