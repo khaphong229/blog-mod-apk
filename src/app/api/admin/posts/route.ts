@@ -3,6 +3,94 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export async function POST(request: NextRequest) {
+  try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if user is admin or editor
+    const userRole = (session.user as any).role;
+    if (!["ADMIN", "SUPER_ADMIN", "EDITOR"].includes(userRole)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const {
+      title,
+      slug,
+      excerpt,
+      content,
+      featuredImage,
+      status,
+      featured,
+      categoryId,
+      tagIds,
+      version,
+      fileSize,
+      requirements,
+      developer,
+      downloadUrl,
+      metaTitle,
+      metaDescription,
+      metaKeywords,
+    } = body;
+
+    // Create post
+    const post = await prisma.post.create({
+      data: {
+        title,
+        slug,
+        excerpt,
+        content,
+        featuredImage,
+        status: status || "DRAFT",
+        featured: featured || false,
+        categoryId,
+        authorId: session.user.id,
+        version,
+        fileSize,
+        requirements,
+        developer,
+        downloadUrl,
+        metaTitle,
+        metaDescription,
+        metaKeywords,
+        publishedAt: status === "PUBLISHED" ? new Date() : null,
+        tags: tagIds
+          ? {
+              connect: tagIds.map((id: string) => ({ id })),
+            }
+          : undefined,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        category: true,
+        tags: true,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      post,
+    });
+  } catch (error) {
+    console.error("Error creating post:", error);
+    return NextResponse.json(
+      { error: "Failed to create post" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
