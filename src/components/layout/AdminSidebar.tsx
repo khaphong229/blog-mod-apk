@@ -61,7 +61,6 @@ const navItems: NavItem[] = [
     title: "Bình luận",
     href: "/admin/comments",
     icon: MessageSquare,
-    badge: 5,
   },
   {
     title: "Người dùng",

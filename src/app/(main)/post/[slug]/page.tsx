@@ -7,6 +7,7 @@ import { PostMeta } from "@/components/post/PostMeta";
 import { DownloadSection } from "@/components/post/DownloadSection";
 import { TableOfContents } from "@/components/post/TableOfContents";
 import { RelatedPosts } from "@/components/post/RelatedPosts";
+import { CommentSection } from "@/components/comments/CommentSection";
 import { Loader2 } from "lucide-react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
@@ -127,6 +128,15 @@ export default function PostPage({ params }: PostPageProps) {
                 <TableOfContents />
               </div>
             </aside>
+          </div>
+        </div>
+      </section>
+
+      {/* Comments Section */}
+      <section className="py-12 bg-muted/30">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
+            <CommentSection slug={post.slug} />
           </div>
         </div>
       </section>
