@@ -23,8 +23,6 @@ const nextConfig: NextConfig = {
   },
   // Compression
   compress: true,
-  // Performance optimizations
-  swcMinify: true,
   // Headers for caching
   async headers() {
     return [
