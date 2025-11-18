@@ -53,11 +53,12 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  posts    Post[]
-  comments Comment[]
-  media    Media[]
-  sessions Session[]
-  accounts Account[]
+  posts     Post[]
+  comments  Comment[]
+  media     Media[]
+  downloads Download[]
+  sessions  Session[]
+  accounts  Account[]
 
   @@index([email])
 }
@@ -105,9 +106,10 @@ model Post {
   author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  tags       Tag[]     @relation("PostToTag")
+  tags       Tag[]      @relation("PostToTag")
   comments   Comment[]
   media      Media[]
+  downloads  Download[]
 
   @@index([slug])
   @@index([status])
@@ -220,6 +222,25 @@ model Media {
 
   @@index([postId])
   @@index([uploadedById])
+}
+
+// ============================================
+// DOWNLOAD TRACKING MODEL
+// ============================================
+
+model Download {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  ipAddress String?
+  userAgent String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // ============================================
