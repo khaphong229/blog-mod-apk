@@ -1,17 +1,13 @@
-"use client";
-
-import { useEffect } from "react";
-import { usePost } from "@/hooks/usePosts";
-import { PostContent } from "@/components/post/PostContent";
-import { PostMeta } from "@/components/post/PostMeta";
-import { DownloadSection } from "@/components/post/DownloadSection";
-import { TableOfContents } from "@/components/post/TableOfContents";
-import { RelatedPosts } from "@/components/post/RelatedPosts";
-import { CommentSection } from "@/components/comments/CommentSection";
-import { Loader2 } from "lucide-react";
+import { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import axios from "@/lib/axios";
+import { PostPageClient } from "@/components/post/PostPageClient";
+import {
+  generateMetadata as generateSEOMetadata,
+  generateArticleStructuredData,
+  generateBreadcrumbStructuredData,
+  generateSoftwareApplicationStructuredData,
+} from "@/lib/seo";
 
 interface PostPageProps {
   params: {
@@ -19,130 +15,137 @@ interface PostPageProps {
   };
 }
 
-export default function PostPage({ params }: PostPageProps) {
+// Generate metadata for SEO
+export async function generateMetadata({
+  params,
+}: PostPageProps): Promise<Metadata> {
   const { slug } = params;
-  const { data: post, isLoading, error } = usePost(slug);
 
-  // Track view count
-  useEffect(() => {
-    if (post) {
-      // Increment view count after 3 seconds (to avoid bots)
-      const timer = setTimeout(() => {
-        axios.post(`/api/posts/${slug}/views`).catch(console.error);
-      }, 3000);
+  const post = await prisma.post.findUnique({
+    where: { slug, status: "PUBLISHED" },
+    include: {
+      author: {
+        select: {
+          name: true,
+          image: true,
+        },
+      },
+      category: {
+        select: {
+          name: true,
+        },
+      },
+      tags: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
 
-      return () => clearTimeout(timer);
-    }
-  }, [post, slug]);
-
-  if (isLoading) {
-    return (
-      <div className="container py-16">
-        <div className="flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
+  if (!post) {
+    return {
+      title: "Không tìm thấy bài viết",
+    };
   }
 
-  if (error || !post) {
-    notFound();
+  return generateSEOMetadata({
+    title: post.metaTitle || post.title,
+    description: post.metaDescription || post.excerpt || "",
+    image: post.featuredImage || undefined,
+    url: `/post/${post.slug}`,
+    type: "article",
+    publishedTime: post.publishedAt?.toISOString(),
+    modifiedTime: post.updatedAt.toISOString(),
+    author: post.author.name || undefined,
+    tags: post.tags.map((tag) => tag.name),
+  });
+}
+
+export default function PostPage({ params }: PostPageProps) {
+  return (
+    <>
+      <PostPageClient slug={params.slug} />
+      <StructuredData slug={params.slug} />
+    </>
+  );
+}
+
+// Structured Data Component
+async function StructuredData({ slug }: { slug: string }) {
+  const post = await prisma.post.findUnique({
+    where: { slug, status: "PUBLISHED" },
+    include: {
+      author: {
+        select: {
+          name: true,
+          image: true,
+        },
+      },
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+    },
+  });
+
+  if (!post) {
+    return null;
   }
+
+  const articleData = generateArticleStructuredData({
+    title: post.title,
+    description: post.excerpt || "",
+    image: post.featuredImage || undefined,
+    url: `/post/${post.slug}`,
+    publishedTime: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
+    modifiedTime: post.updatedAt.toISOString(),
+    author: {
+      name: post.author.name || "Anonymous",
+      image: post.author.image || undefined,
+    },
+  });
+
+  const breadcrumbData = generateBreadcrumbStructuredData([
+    { name: "Trang chủ", url: "/" },
+    ...(post.category
+      ? [{ name: post.category.name, url: `/category/${post.category.slug}` }]
+      : []),
+    { name: post.title, url: `/post/${post.slug}` },
+  ]);
+
+  const softwareData =
+    post.version || post.developer
+      ? generateSoftwareApplicationStructuredData({
+          name: post.title,
+          description: post.excerpt || "",
+          image: post.featuredImage || undefined,
+          version: post.version || undefined,
+          fileSize: post.fileSize || undefined,
+          requirements: post.requirements || undefined,
+          developer: post.developer || undefined,
+          downloadUrl: post.downloadUrl || undefined,
+        })
+      : null;
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative bg-muted/30 py-12">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            {/* Title */}
-            <h1 className="mb-6 text-3xl font-bold md:text-4xl lg:text-5xl">
-              {post.title}
-            </h1>
-
-            {/* Meta Info */}
-            <PostMeta
-              author={post.author}
-              category={post.category}
-              tags={post.tags}
-              createdAt={post.createdAt}
-              viewCount={post.viewCount}
-              downloadCount={post.downloadCount}
-              commentCount={post._count?.comments || 0}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Image */}
-      {post.featuredImage && (
-        <section className="relative aspect-video w-full overflow-hidden bg-muted">
-          <Image
-            src={post.featuredImage}
-            alt={post.title}
-            fill
-            className="object-cover"
-            priority
-          />
-        </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
+      />
+      {softwareData && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareData) }}
+        />
       )}
-
-      {/* Main Content */}
-      <section className="py-12">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Sidebar - Table of Contents (Desktop) */}
-            <aside className="hidden xl:block xl:col-span-2">
-              <TableOfContents />
-            </aside>
-
-            {/* Main Article */}
-            <article className="lg:col-span-7 xl:col-span-7">
-              {/* Excerpt */}
-              {post.excerpt && (
-                <div className="mb-8 rounded-lg bg-primary/5 border-l-4 border-primary p-6">
-                  <p className="text-lg leading-relaxed text-muted-foreground">
-                    {post.excerpt}
-                  </p>
-                </div>
-              )}
-
-              {/* Content */}
-              <PostContent content={post.content} />
-            </article>
-
-            {/* Right Sidebar - Download Section */}
-            <aside className="lg:col-span-5 xl:col-span-3 space-y-6">
-              <DownloadSection
-                postSlug={post.slug}
-                downloadUrl={post.downloadUrl}
-                version={post.version}
-                fileSize={post.fileSize}
-                requirements={post.requirements}
-                developer={post.developer}
-                downloadCount={post.downloadCount}
-              />
-
-              {/* Mobile Table of Contents */}
-              <div className="xl:hidden">
-                <TableOfContents />
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-
-      {/* Comments Section */}
-      <section className="py-12 bg-muted/30">
-        <div className="container">
-          <div className="mx-auto max-w-4xl">
-            <CommentSection slug={post.slug} />
-          </div>
-        </div>
-      </section>
-
-      {/* Related Posts */}
-      <RelatedPosts postId={post.id} categoryId={post.category?.id} />
     </>
   );
 }

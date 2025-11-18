@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CategoryPage } from "@/components/category/CategoryPage";
+import { generateMetadata as generateSEOMetadata } from "@/lib/seo";
 
 interface CategoryPageProps {
   params: {
@@ -39,17 +40,15 @@ export async function generateMetadata({
     };
   }
 
-  return {
-    title: `${category.name} - Blog ModAPK`,
+  return generateSEOMetadata({
+    title: category.name,
     description:
       category.description ||
       `Khám phá các ứng dụng và game trong danh mục ${category.name}`,
-    openGraph: {
-      title: category.name,
-      description: category.description || undefined,
-      images: category.image ? [category.image] : undefined,
-    },
-  };
+    image: category.image || undefined,
+    url: `/${params.slug}`,
+    type: "website",
+  });
 }
 
 export default async function Page({ params }: CategoryPageProps) {

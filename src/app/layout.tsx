@@ -12,27 +12,40 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Blog ModAPK - Download Apps, Games & Tools",
-    template: "%s | Blog ModAPK",
+    default: "BlogModAPK - Tải Ứng Dụng, Game & Tools",
+    template: "%s | BlogModAPK",
   },
-  description: "Download latest apps, games, and tools. Free, safe, and fast downloads with detailed reviews and guides.",
-  keywords: ["apps", "games", "tools", "download", "modapk", "android"],
-  authors: [{ name: "Blog ModAPK" }],
-  creator: "Blog ModAPK",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  description: "Tải xuống ứng dụng, game và công cụ mới nhất. Download miễn phí, an toàn và nhanh chóng với đánh giá chi tiết và hướng dẫn.",
+  keywords: ["apps", "games", "tools", "download", "modapk", "android", "ứng dụng", "game", "tải xuống"],
+  authors: [{ name: "BlogModAPK" }],
+  creator: "BlogModAPK",
+  publisher: "BlogModAPK",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     type: "website",
     locale: "vi_VN",
     url: "/",
-    title: "Blog ModAPK - Download Apps, Games & Tools",
-    description: "Download latest apps, games, and tools. Free, safe, and fast downloads.",
-    siteName: "Blog ModAPK",
+    title: "BlogModAPK - Tải Ứng Dụng, Game & Tools",
+    description: "Tải xuống ứng dụng, game và công cụ mới nhất. Download miễn phí, an toàn và nhanh chóng.",
+    siteName: "BlogModAPK",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "BlogModAPK",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog ModAPK",
-    description: "Download latest apps, games, and tools.",
+    title: "BlogModAPK - Tải Ứng Dụng, Game & Tools",
+    description: "Tải xuống ứng dụng, game và công cụ mới nhất.",
     creator: "@blogmodapk",
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
@@ -44,6 +57,11 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1,
     },
+  },
+  verification: {
+    google: "your-google-site-verification-code",
+    // yandex: "your-yandex-verification-code",
+    // bing: "your-bing-verification-code",
   },
 };
 
